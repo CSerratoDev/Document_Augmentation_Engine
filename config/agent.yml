@@ -1,0 +1,49 @@
+interface:
+  display_name: "Document Augmentation Engine"
+  short_description: "Procesador asíncrono para paperless: Análisis, Extracción e Inyección de datos en PDFs"
+  brand_color: "#0056b3" # Azul institucional/gubernamental
+  default_prompt: "Analiza el documento PDF adjunto, identifica los campos vacíos según la taxonomía de 100 tipos de datos y genera el esquema de formulario."
+
+policy:
+  allow_implicit_invocation: true
+  max_iterations_per_run: 5
+  require_human_approval_for_injection: true
+
+# Requerimientos técnicos que el agente lee para ejecutar la Skill
+requirements:
+  capabilities:
+    - visual_ocr_analysis: "Necesario para detectar coordenadas (x, y) de líneas de captura (________)"
+    - semantic_entity_mapping: "Uso del catálogo de 100 tipos de datos para clasificar variables"
+    - async_state_persistence: "Capacidad de pausar la ejecución mientras el usuario llena el formulario"
+  
+  data_stack:
+    primary_db: "MongoDB"
+    vector_store: "ChromaDB" # Para recordar contextos de documentos previos
+    file_storage: "GridFS"   # Para manejar PDFs de 'n' páginas eficientemente en Mongo
+
+  runtime_variables:
+    - name: "confidence_threshold"
+      value: 0.95
+      description: "Nivel de certeza mínimo para auto-asignar un tipo de dato sin preguntar"
+    - name: "output_format"
+      value: "Flattened_PDF"
+      description: "Asegura que el PDF final no sea editable para procesos legales"
+
+# Definición de los pasos que el Agente debe seguir (Workflow)
+workflow_nodes:
+  - id: "ingesta"
+    action: "read_pdf_metadata"
+    input: "raw_file"
+  
+  - id: "inspeccion_clausulas"
+    action: "detect_entity_placeholders"
+    logic: "match_taxonomy_100"
+    reference: "SKILL.md#seccion-1"
+
+  - id: "generar_formulario"
+    action: "create_json_schema"
+    output: "async_ui_form"
+
+  - id: "inyeccion_datos"
+    action: "pypdf_overlay_text"
+    depends_on: "user_form_completion"
