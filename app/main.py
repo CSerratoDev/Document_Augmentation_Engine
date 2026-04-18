@@ -2,9 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
-    title="Real Estate API",
-    description="API for Real Estate System",
-    version="1.0.0"
+    title="DataDolphin API",
+    description="API for Data Dolphin, system for orquestation documents.This project is an advanced document orchestration system designed to transform physical or digital administrative processes into highly efficient paperless workflows. The agent leverages multimodal AI to reverse-engineern-page documents, identifying missing fields and automating the data injection process.",
+    version="2.0.0"
 )
 
 origins = [

@@ -1,9 +1,7 @@
-version: "3.9"
-
 services:
   db:
     image: postgres:15
-    container_name: real_state_pg
+    container_name: readocs_db
     restart: always
     env_file:
       - .env
@@ -11,7 +9,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./app/config:/docker-entrypoint-initdb.d
+      - ./app/database:/docker-entrypoint-initdb.d
   api:
     build: .
     container_name: fastapi_app
