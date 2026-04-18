@@ -1,4 +1,6 @@
-from fastapi import APIRouter
+import os
+import shutil
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from app.crud.documents_crud import create_document, get_all_documents, get_document, update_document, delete_document
 from app.schemas.user_schema import DocumentSchema, DocumentResponse
 
@@ -6,6 +8,9 @@ router = APIRouter(
     prefix="/api/documents",
     tags=["Documents"]
 )
+
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @router.get("/", response_model=list[DocumentResponse])
 async def read_documents(
@@ -22,9 +27,35 @@ async def read_documents(
         company_id=company_id
     )
 
-@router.post("/")
-async def write_document(document_data: DocumentSchema):
-    return create_document(document_data.model_dump())
+@router.post("/", response_model=DocumentResponse)
+async def upload_document(
+    company_id: int = Form(...),
+    file: UploadFile = File(...)
+):
+    # 1. Validar extensión
+    file_extension = file.filename.split('.')[-1].lower()
+    if file_extension != "pdf":
+        raise HTTPException(status_code=400, detail="Solo se permiten archivos PDF")
+
+    # 2. Definir ruta y guardar archivo físicamente
+    file_path = os.path.join(UPLOAD_DIR, file.filename)
+    
+    try:
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al guardar archivo: {str(e)}")
+
+    # 3. Preparar datos para el CRUD
+    document_data = {
+        "file_name": file.filename,
+        "file_extension": file_extension,
+        "file_url": file_path,
+        "company_id": company_id
+    }
+
+    # 4. Registrar en la base de datos
+    return create_document(document_data)
 
 @router.get("/{document_id}", response_model=DocumentResponse)
 async def read_document(document_id: int):

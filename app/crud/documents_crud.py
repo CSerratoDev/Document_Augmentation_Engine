@@ -10,14 +10,22 @@ def create_document(document_data: dict):
             cur.execute("""
                 INSERT INTO documents (file_name, file_extension, file_url, company_id)
                 VALUES (%(file_name)s, %(file_extension)s, %(file_url)s, %(company_id)s)
+                RETURNING id, file_name, file_extension, file_url, company_id, uploaded_at;
             """, document_data)
+            row = cur.fetchone()
             conn.commit()
-            return {"message": "Document created successfully"}
+            return {
+                "id": row[0],
+                "file_name": row[1],
+                "file_extension": row[2],
+                "file_url": row[3],
+                "company_id": row[4],
+                "uploaded_at": str(row[5])
+            }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
-        if conn:
-            conn.close()
+        if conn: conn.close()
 
 def get_all_documents(
     skip: int = 0,
