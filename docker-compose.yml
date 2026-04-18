@@ -22,6 +22,6 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
-    command: ["/bin/sh", "-c", "./entrypoint.sh"]
+    command: ["/bin/sh", "./entrypoint.sh"]
 volumes:
   postgres_data:
