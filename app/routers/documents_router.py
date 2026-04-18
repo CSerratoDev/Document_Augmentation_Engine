@@ -50,10 +50,11 @@ async def upload_document(
     document_data = {
         "file_name": file.filename,
         "file_extension": file_extension,
-        "file_url": file_path,
+        # Guardamos solo el nombre para evitar conflictos con el mount
+        # O guardamos la URL final que el frontend usará
+        "file_url": f"uploads/{file.filename}", 
         "company_id": company_id
     }
-
     # 4. Registrar en la base de datos
     return create_document(document_data)
 
